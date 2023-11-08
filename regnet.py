@@ -126,7 +126,7 @@ class rnn_regulated_block(nn.Module):
 
 class RegNet(pl.LightningModule):
     def __init__(self, regulated_block:nn.Module, in_dim:int, h_dim:int, intermediate_channels:int,
-                 classes:int=3, cell_type:str='gru', layers:List=[3, 3, 3], config=None):
+                 classes:int=3, cell_type:str='gru', layers:List=[1, 1, 3, 3, 3, 3, 3], config=None):
         super(RegNet, self).__init__()
         self.layers = layers
         self.classes = classes
@@ -293,7 +293,10 @@ def train_regnet(config, num_epochs=10, num_gpus=1):
     block2 = config['block2']
     block3 = config['block3']
     block4 = config['block4']
-    layers = [block1, block2, block3, block4]
+    block5 = config['block5']
+    block6 = config['block6']
+    block7 = config['block7']
+    layers = [block1, block2, block3, block4, block5, block6, block7]
    
     batch_size = config['batch_size']
     intermediate_channels = config['intermediate_channels']
@@ -331,6 +334,9 @@ def TuneAsha(train_fn, model:str, num_samples:int=10, num_epochs:int=10, cpus_pe
         "block1": tune.randint(2, 5),
         "block2": tune.randint(2, 5),
         "block3": tune.randint(2, 5),
+        "block4": tune.randint(2, 5),
+        "block5": tune.randint(2, 5),
+        "block6": tune.randint(2, 5),
         "cell_type": tune.choice(['gru', 'lstm']),
         "intermediate_channels": tune.choice([16, 32, 64]),
         "lr": tune.loguniform(1e-4, 1e-1),
@@ -341,7 +347,7 @@ def TuneAsha(train_fn, model:str, num_samples:int=10, num_epochs:int=10, cpus_pe
     scheduler = ASHAScheduler(max_t=num_epochs, grace_period=1, reduction_factor=2)
 
     reporter = CLIReporter(
-        parameter_columns=[ "block1", "block2", "block3", "block4", "lr", "batch_size", "weight_decay"],
+        parameter_columns=[ "block1", "block2", "block3", "block4", "block5", "block6", "block7", "lr", "batch_size", "weight_decay"],
         metric_columns=["val_loss", "val_accuracy", "training_iteration"]
     )
 
@@ -367,6 +373,9 @@ def TunePBT(train_fn, model:str, num_samples:int=1, num_epochs:int=10, cpus_per_
         "block2": tune.randint(3, 8),
         "block3": tune.randint(3, 8),
         "block4": tune.randint(3, 8),
+        "block5": tune.randint(3, 8),
+        "block6": tune.randint(3, 8),
+        "block7": tune.randint(3, 8),
         "h_dim": tune.choice([8, 16, 32, 64, 128]),
         "cell_type": tune.choice(['gru', 'lstm']),
         "intermediate_channels": tune.choice([16, 32, 64]),
@@ -382,6 +391,9 @@ def TunePBT(train_fn, model:str, num_samples:int=1, num_epochs:int=10, cpus_per_
             "block2": tune.randint(3, 8),
             "block3": tune.randint(3, 8),
             "block4": tune.randint(3, 8),
+            "block5": tune.randint(3, 8),
+            "block6": tune.randint(3, 8),
+            "block7": tune.randint(3, 8),
             "cell_type": ['gru', 'lstm'],
             "lr": tune.loguniform(1e-4, 1e-1),
             "weight_decay": tune.loguniform(1e-4, 1e-5),
@@ -391,7 +403,7 @@ def TunePBT(train_fn, model:str, num_samples:int=1, num_epochs:int=10, cpus_per_
 
     reporter = CLIReporter(
         parameter_columns=[
-            "h_dim","block1", "block2", "block3", "block4", "cell_type", "lr",
+            "h_dim","block1", "block2", "block3", "block4", "block5", "block6", "block7", "cell_type", "lr",
             "batch_size", "intermediate_channels" ,"weight_decay"
         ],
         metric_columns=["val_loss", "val_accuracy", "training_iteration"])
